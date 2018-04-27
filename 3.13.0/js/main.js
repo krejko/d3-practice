@@ -5,6 +5,8 @@
 */
 
 var flag = false;
+var t = d3.transition().duration(500);
+
 // --- Setup the canvas ---
 margins = {top: 10, bottom: 40, left: 70, right: 10};
 height = 500 - margins.left - margins.right;
@@ -92,27 +94,29 @@ function update(data) {
 
     // --- Set up bars on graph ---
     // Join new & old data
-    var bars = group.selectAll("rect").data(data);
+    var rects = group.selectAll("rect").data(data);
     
     // Remove outdated data
-    bars.exit().remove();
+    rects.exit().remove();
 
     // Updated old elements present in new data
-    bars
-        .attr("x", (d, i) => { return bandScale(d.month); })
-        .attr("y", (d, i) => { return linearScale(d[value]); })
-        .attr("width", bandScale.bandwidth)
-        .attr("height", (d, i) => { return height - linearScale(d[value]); })
-
+    rects
     // Add new elements present in new data
-    bars.enter()
+    rects.enter()
         .append("rect")
             .attr("x", (d, i) => { return bandScale(d.month); })
-            .attr("y", (d, i) => { return linearScale(d[value]); })
+            .attr("y", height)
             .attr("width", bandScale.bandwidth)
-            .attr("height", (d, i) => { return height - linearScale(d[value]); })
+            .attr("height", 0)
             .attr("fill", "gray")
-
+            .merge(rects)
+            .transition(t)
+                .attr("x", (d, i) => { return bandScale(d.month); })
+                .attr("y", (d, i) => { return linearScale(d[value]); })
+                .attr("width", bandScale.bandwidth)
+                .attr("height", (d, i) => { return height - linearScale(d[value]); })
+    
+    
 
 
 }
