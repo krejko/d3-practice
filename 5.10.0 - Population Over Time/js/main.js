@@ -5,7 +5,7 @@
 */
 
 var index = 0;
-var updateSpeed = 150;
+var updateSpeed = 1000;
 var t = d3.transition().duration(updateSpeed);
 
 // --- Setup the canvas --- 
@@ -76,6 +76,20 @@ var populationScale = d3.scaleLinear()
 // color scale
 var colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 
+// --- Tooltip ---
+var tip = d3.tip().attr('class', 'd3-tip')
+    .html((d) => { 
+		var html = "Country: " + d.country + "<br>"; 
+		html += "Continent: " + d.continent + "<br>"; 
+		html += "Life Expectancy: " + d3.format(".2f")(d.life_exp) + "<br>"; 
+		html += "GDP Per Capita: " + d3.format(",.0f")(d.income) + "<br>"; 
+		html += "Population: " + d3.format(",.0f")(d.population) + "<br>"; 
+		return html;
+	});
+canvas.call(tip)
+
+// --- Get Data --- 
+
 d3.json("data/data.json").then(function(data){
 
 	maxLifeExpectancy = d3.max(data, (year) => {
@@ -92,7 +106,9 @@ d3.json("data/data.json").then(function(data){
 	yScale.domain([0, maxLifeExpectancy]);
 	yAxisGroup.call(yAxis);
 	
-	// console.log(data);
+	console.log(data);
+
+	setupLegend(data);
 
 	// Setup Initial graph
 	update(data);
@@ -126,6 +142,8 @@ function update(data) {
 			.attr("cx", (d) => { return d.income ? xScale(d.income) : 0; })
 			.attr("cy", (d) => { return yScale(d.life_exp) || graphHeight})
 			.attr("r",  (d) => { return Math.sqrt(populationScale(d.population) / Math.PI); })
+			.on("mouseover", tip.show)
+            .on("mouseout", tip.hide)
 			.merge(circles)
 			.transition()
 				.attr("cx", (d) => { return d.income ? xScale(d.income) : 0; })
@@ -137,4 +155,36 @@ function update(data) {
 	if (index >= data.length){
 		index = 0;
 	}
+}
+
+function setupLegend(data) {
+	var continents = data[0].countries.map((d) => { return d.continent; }).filter(onlyUnique);
+	
+	var legendWidth = 150;
+	var legendHeight = 150;
+
+	var legend = canvas.append("g")
+		.attr("transform", "translate(" + (margins.left + graphWidth - 10 ) + ", " + (margins.top + graphHeight - legendHeight) + ")" )
+
+	continents.forEach((continent, i) => {
+		var legendRow = legend.append("g")
+			.attr("transform", "translate(0, " + (i * 20) + ")");
+
+		legendRow.append('rect')
+			.attr("width", 10)
+			.attr("height", 10)
+			.attr("fill", colorScale(continent));
+
+		legendRow.append("text")
+			.attr("x", -10)
+			.attr("y", 10)
+			.attr("text-anchor", "end")
+			.style("text-transform", "capitalize")
+			.text(continent);
+	});
+
+}
+
+function onlyUnique(value, index, self) { 
+    return self.indexOf(value) === index;
 }
