@@ -5,7 +5,9 @@
 */
 
 var index = 0;
-var updateSpeed = 1000;
+var playing = false;
+var interval;
+var updateSpeed = 500;
 var t = d3.transition().duration(updateSpeed);
 
 // --- Setup the canvas --- 
@@ -88,9 +90,39 @@ var tip = d3.tip().attr('class', 'd3-tip')
 	});
 canvas.call(tip)
 
-// --- Get Data --- 
 
-d3.json("data/data.json").then(function(data){
+$("#previous-button").on("click", () => {
+	stepBack();
+});
+
+$("#play-button").on("click", () => {
+	playing = !playing;
+	if(playing){
+		$("#play-button").html('&#10074; &#10074;');		
+		interval = d3.interval(() => step() , updateSpeed);
+	} else {
+		$("#play-button").html('&#x25BA;');		
+		interval.stop();
+	}
+});
+
+$("#next-button").on("click", () => {
+	step();
+});
+
+$("#reset-button").on("click", () => {
+	reset();
+});
+
+$("#continent-select").on("change", () => {
+	update();
+});
+
+// --- Get Data --- 
+var data;
+d3.json("data/data.json").then(function(json){
+
+	data = json;
 
 	maxLifeExpectancy = d3.max(data, (year) => {
 		return d3.max(year.countries, (country) => { return country.life_exp; });
@@ -111,20 +143,44 @@ d3.json("data/data.json").then(function(data){
 	setupLegend(data);
 
 	// Setup Initial graph
-	update(data);
-
-	// Start Animation
-	d3.interval(() => {
-		update(data)
-	}, updateSpeed);
+	update();
 });
 
-function update(data) {
+function reset(){
+	index = 0;
+	update();
+}
+
+function step(){
+	index += 1;
+	if (index >= data.length){
+		index = 0;
+	}
+	update();
+}
+
+function stepBack(){
+	index -= 1;
+	if (index < 0){
+		index = data.length - 1;
+	}
+	update();
+}
+
+
+function update() {
 
 	
-	var dataSegment = data[index];
-	var countries = dataSegment.countries;
 	
+	var continent = $("#continent-select").val();
+	var dataSegment = data[index];
+	var countries = dataSegment.countries.filter((d) => {
+		if (continent == "all") { return true; }
+		else {
+			return d.continent == continent;
+		}
+	})
+
 	// --- Update Labels --- 
 	yearLabel.text(dataSegment.year);
 
@@ -151,10 +207,7 @@ function update(data) {
 				.attr("r",  (d) => { return Math.sqrt(populationScale(d.population) / Math.PI); })
 
 	// --- Update interval information --- 
-	index += 1;
-	if (index >= data.length){
-		index = 0;
-	}
+
 }
 
 function setupLegend(data) {
