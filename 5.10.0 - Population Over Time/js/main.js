@@ -91,33 +91,6 @@ var tip = d3.tip().attr('class', 'd3-tip')
 canvas.call(tip)
 
 
-$("#previous-button").on("click", () => {
-	stepBack();
-});
-
-$("#play-button").on("click", () => {
-	playing = !playing;
-	if(playing){
-		$("#play-button").html('&#10074; &#10074;');		
-		interval = d3.interval(() => step() , updateSpeed);
-	} else {
-		$("#play-button").html('&#x25BA;');		
-		interval.stop();
-	}
-});
-
-$("#next-button").on("click", () => {
-	step();
-});
-
-$("#reset-button").on("click", () => {
-	reset();
-});
-
-$("#continent-select").on("change", () => {
-	update();
-});
-
 // --- Get Data --- 
 var data;
 d3.json("data/data.json").then(function(json){
@@ -146,8 +119,39 @@ d3.json("data/data.json").then(function(json){
 	update();
 });
 
-function reset(){
+$("#previous-button").on("click", () => {
+	stepBack();	
+});		
+
+$("#play-button").on("click", () => {
+	playing = !playing;
+	if(playing){
+		$("#play-button").html('&#10074; &#10074;');		
+		interval = d3.interval(() => step() , updateSpeed);
+	} else {
+		$("#play-button").html('&#x25BA;');		
+		interval.stop();
+	}
+});
+
+$("#next-button").on("click", () => {
+	step();
+});
+
+$("#reset-button").on("click", () => {
 	index = 0;
+	update();
+});
+
+$("#continent-select").on("change", () => {
+	update();
+});
+
+function stepBack(){
+	index -= 1;
+	if (index < 0){
+		index = data.length - 1;
+	}
 	update();
 }
 
@@ -159,19 +163,7 @@ function step(){
 	update();
 }
 
-function stepBack(){
-	index -= 1;
-	if (index < 0){
-		index = data.length - 1;
-	}
-	update();
-}
-
-
 function update() {
-
-	
-	
 	var continent = $("#continent-select").val();
 	var dataSegment = data[index];
 	var countries = dataSegment.countries.filter((d) => {
@@ -205,8 +197,6 @@ function update() {
 				.attr("cx", (d) => { return d.income ? xScale(d.income) : 0; })
 				.attr("cy", (d) => { return yScale(d.life_exp) || graphHeight})
 				.attr("r",  (d) => { return Math.sqrt(populationScale(d.population) / Math.PI); })
-
-	// --- Update interval information --- 
 
 }
 
