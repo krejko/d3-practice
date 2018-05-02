@@ -100,9 +100,10 @@ d3.json("data/data.json").then(function(json){
 	maxLifeExpectancy = d3.max(data, (year) => {
 		return d3.max(year.countries, (country) => { return country.life_exp; });
 	})
+	
 	maxIncome = d3.max(data, (year) => {
 		return d3.max(year.countries, (country) => { return country.income; });
-	})
+	})	
 
 	// --- Update Scales & Axis ---
 	xScale.domain([300, maxIncome]);
@@ -147,6 +148,16 @@ $("#continent-select").on("change", () => {
 	update();
 });
 
+$("#date-slider").slider({
+	max: 2014,
+	min: 1800,
+	step: 1,
+	slide: (event, ui) => {
+		index = ui.value - 1800;
+		update();
+	}
+})
+
 function stepBack(){
 	index -= 1;
 	if (index < 0){
@@ -173,8 +184,10 @@ function update() {
 		}
 	})
 
-	// --- Update Labels --- 
+	// --- Update Labels & Sliders --- 
 	yearLabel.text(dataSegment.year);
+	$("#year").html(dataSegment.year);
+	$("#date-slider").slider("value", dataSegment.year);
 
 	// --- Plot Graph Data ---
 	// Join new data with old
