@@ -95,6 +95,14 @@ canvas.call(tip)
 var data;
 d3.json("data/data.json").then(function(json){
 
+	// --- Remove Incomplete Data Points --- 
+	json.forEach((dataSegment) => {
+		var countries = dataSegment.countries;
+		dataSegment.countries = countries.filter(country => {
+			return country.life_exp != null && country.income != null && country.income > 300;
+		})
+	})
+
 	data = json;
 
 	maxLifeExpectancy = d3.max(data, (year) => {
